@@ -37,19 +37,25 @@ import org.bukkit.inventory.ItemStack;
  */
 public class PlayerInteractListener implements Listener {
 
-  @EventHandler(priority = EventPriority.HIGHEST)
+  private static final PlayerInteractHandler HANDLER = new PlayerInteractHandler();
+
+  @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
   public void onInteract(final PlayerInteractEvent event) {
 
-    final PlayerProvider provider = PluginCore.server().initializePlayer(event.getPlayer());
-
-    final ItemStack stack = event.getItem();
-
-    if(stack == null) return;
-
-    if(event.getAction().equals(Action.RIGHT_CLICK_AIR) ||
-       event.getAction().equals(Action.RIGHT_CLICK_BLOCK)) {
-
-      new PlayerInteractHandler().handle(provider, new PaperItemStack().of(stack));
+    final Action action = event.getAction();
+    if (action != Action.RIGHT_CLICK_AIR && action != Action.RIGHT_CLICK_BLOCK) {
+      return;
     }
+
+    if (event.getHand() != EquipmentSlot.HAND) {
+      return;
+    }
+    final ItemStack stack = event.getItem();
+    if (stack == null || stack.getType().isAir()) {
+      return;
+    }
+
+    final PlayerProvider provider = PluginCore.server().initializePlayer(event.getPlayer());
+    HANDLER.handle(provider, new PaperItemStack().of(stack));
   }
 }
